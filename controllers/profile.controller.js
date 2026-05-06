@@ -1,0 +1,157 @@
+const prisma = require("../config/prisma");
+const ApiError = require("../utils/errors/api-error");
+const { generateProfileToken } = require("../utils/jwt/jwt.util");
+const mediaUtil = require("../utils/media.util");
+
+const MAX_PROFILES = 5;
+
+const ProfileController = {
+  createProfile: async function (userId, data) {
+    const count = await prisma.profile.count({ where: { userId, isDeleted: false } });
+    if (count >= MAX_PROFILES) {
+      throw ApiError.badRequest(`Bạn chỉ có thể tạo tối đa ${MAX_PROFILES} tài khoản con.`);
+    }
+
+    let avatarUrl = data.avatar || null;
+
+    if (data.avatarFile) {
+      avatarUrl = await mediaUtil.upload(data.avatarFile, `profiles/${userId}`);
+    }
+
+    const profile = await prisma.profile.create({
+      data: {
+        userId: userId,
+        name: data.name,
+        avatar: avatarUrl,
+        pin: data.pin || null,
+      }
+    });
+
+    return profile;
+  },
+
+  getProfilesByUser: async function (userId) {
+    const profiles = await prisma.profile.findMany({
+      where: { userId, isDeleted: false },
+      orderBy: { createdAt: 'asc' }
+    });
+    
+    // Map to remove 'pin', 'userId', 'createdAt', 'updatedAt' and add 'hasPin'
+    return profiles.map(profile => {
+      return {
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar,
+        hasPin: !!profile.pin
+      };
+    });
+  },
+
+  switchProfile: async function (userId, profileId, inputPin) {
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId, isDeleted: false }
+    });
+
+    if (!profile) {
+      throw ApiError.notFound("Không tìm thấy tài khoản con.");
+    }
+
+    // Check PIN if profile has one
+    if (profile.pin) {
+      if (!inputPin || inputPin !== profile.pin) {
+        throw ApiError.unauthorized("Mã PIN không chính xác.");
+      }
+    }
+
+    // We no longer change isDefault here because isDefault is only for the "Main" profile.
+    // Instead, we issue a secure Profile Token to prove this device has unlocked the profile.
+    const profileToken = generateProfileToken(profileId);
+
+    return {
+      profile: {
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar,
+        hasPin: !!profile.pin
+      },
+      profileToken
+    };
+  },
+
+  updateProfile: async function (userId, profileId, data) {
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId, isDeleted: false }
+    });
+
+    if (!profile) {
+      throw ApiError.notFound("Không tìm thấy tài khoản con.");
+    }
+
+    let avatarUrl = profile.avatar; // Default to existing avatar
+
+    if (data.avatarFile) {
+      // 1. If a new file is uploaded, upload it
+      avatarUrl = await mediaUtil.upload(data.avatarFile, `profiles/${userId}`);
+      
+      // Delete old avatar if it exists
+      if (profile.avatar) {
+        try {
+          await mediaUtil.deleteByUrl(profile.avatar);
+        } catch (error) {
+          console.error("Failed to delete old avatar from Cloudinary:", error);
+        }
+      }
+    } else if (data.avatar && data.avatar !== "null" && data.avatar !== profile.avatar) {
+      // 2. If a string URL is provided, and it's different from the DB
+      avatarUrl = data.avatar;
+
+      // Delete old avatar if it exists (since we are replacing it with a new link)
+      if (profile.avatar) {
+        try {
+          await mediaUtil.deleteByUrl(profile.avatar);
+        } catch (error) {
+          console.error("Failed to delete old avatar from Cloudinary:", error);
+        }
+      }
+    }
+    // 3. If data.avatar is null, empty, or matches DB, it falls through and keeps profile.avatar
+
+    const updatedProfile = await prisma.profile.update({
+      where: { id: profileId },
+      data: {
+        name: data.name || profile.name,
+        avatar: avatarUrl,
+        pin: data.pin !== undefined ? data.pin : profile.pin,
+      }
+    });
+
+    return updatedProfile;
+  },
+
+  deleteProfile: async function (userId, profileId) {
+    // Check total active profiles
+    const activeCount = await prisma.profile.count({
+      where: { userId, isDeleted: false }
+    });
+
+    if (activeCount <= 1) {
+      throw ApiError.badRequest("Không thể xóa tài khoản con. Phải có ít nhất 1 tài khoản hoạt động.");
+    }
+
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId, isDeleted: false }
+    });
+
+    if (!profile) {
+      throw ApiError.notFound("Không tìm thấy tài khoản con.");
+    }
+
+    // Soft delete instead of hard delete
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { isDeleted: true }
+    });
+  }
+};
+
+module.exports = ProfileController;

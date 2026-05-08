@@ -41,8 +41,8 @@ router.get("/favorites/check/:slug", CheckLogin, CheckProfile, async (req, res) 
     const slug = req.params.slug;
     const profileId = req.profile.id;
 
-    const isFavorited = await movieController.checkFavorite(profileId, slug);
-    res.send(resultDTO.success({ isFavorited }, "Kiểm tra phim yêu thích thành công."));
+    const result = await movieController.checkFavorite(profileId, slug);
+    res.send(resultDTO.success(result, "Kiểm tra phim yêu thích thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));
   }

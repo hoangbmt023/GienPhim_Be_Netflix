@@ -4,24 +4,15 @@ module.exports = {
   UserLoginRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai định dạng")
       .normalizeEmail(),
 
     body("password")
       .notEmpty()
-      .withMessage("password khong duoc rong")
-      .bail()
-      .isStrongPassword({
-        minLength: 8,
-        minLowercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-        minUppercase: 1,
-      })
-      .withMessage("Mật khẩu phải có chữ hoa, chữ thường và số"),
+      .withMessage("password không được rỗng"),
   ],
   RefreshTokenRequestValidator: [
     body("refreshToken")
@@ -44,19 +35,19 @@ module.exports = {
   SendActivateOtpRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai địng dạng")
       .normalizeEmail(),
   ],
   ActivateAccountRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai địng dạng")
       .normalizeEmail(),
     body("otp")
       .notEmpty()
@@ -71,19 +62,19 @@ module.exports = {
   ForgotPasswordRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai địng dạng")
       .normalizeEmail(),
   ],
   VerifyForgotPasswordRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai địng dạng")
       .normalizeEmail(),
     body("otp")
       .notEmpty()
@@ -98,10 +89,10 @@ module.exports = {
   ResetPasswordRequestValidator: [
     body("email")
       .notEmpty()
-      .withMessage("email khong duoc rong")
+      .withMessage("email không được rỗng")
       .bail()
       .isEmail()
-      .withMessage("email sai dinh dang")
+      .withMessage("email sai địng dạng")
       .normalizeEmail(),
     body("otp")
       .notEmpty()
@@ -114,7 +105,7 @@ module.exports = {
       .withMessage("Mã OTP phải là chuỗi gồm 6 ký tự chữ hoặc số"),
     body("newPassword")
       .notEmpty()
-      .withMessage("password khong duoc rong")
+      .withMessage("password không được rỗng")
       .bail()
       .isStrongPassword({
         minLength: 8,

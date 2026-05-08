@@ -87,6 +87,12 @@ const ProfileController = {
       throw ApiError.notFound("Không tìm thấy tài khoản con.");
     }
 
+    if (profile.pin) {
+      if (!data.oldPin || data.oldPin !== profile.pin) {
+        throw ApiError.unauthorized("Mã PIN hiện tại không chính xác.");
+      }
+    }
+
     let avatarUrl = profile.avatar; // Default to existing avatar
 
     if (data.avatarFile) {
@@ -116,19 +122,24 @@ const ProfileController = {
     }
     // 3. If data.avatar is null, empty, or matches DB, it falls through and keeps profile.avatar
 
+    let finalPin = profile.pin;
+    if (data.pin !== undefined) {
+      finalPin = data.pin === '' ? null : data.pin;
+    }
+
     const updatedProfile = await prisma.profile.update({
       where: { id: profileId },
       data: {
         name: data.name || profile.name,
         avatar: avatarUrl,
-        pin: data.pin !== undefined ? data.pin : profile.pin,
+        pin: finalPin,
       }
     });
 
     return updatedProfile;
   },
 
-  deleteProfile: async function (userId, profileId) {
+  deleteProfile: async function (userId, profileId, inputPin) {
     // Check total active profiles
     const activeCount = await prisma.profile.count({
       where: { userId, isDeleted: false }
@@ -144,6 +155,12 @@ const ProfileController = {
 
     if (!profile) {
       throw ApiError.notFound("Không tìm thấy tài khoản con.");
+    }
+
+    if (profile.pin) {
+      if (!inputPin || inputPin !== profile.pin) {
+        throw ApiError.unauthorized("Mã PIN không chính xác.");
+      }
     }
 
     // Soft delete instead of hard delete

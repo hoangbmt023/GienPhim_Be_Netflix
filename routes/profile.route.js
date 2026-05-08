@@ -51,11 +51,11 @@ router.put("/:profileId", CheckLogin, uploadMem.single("avatarFile"), ProfileReq
   try {
     const userId = req.user.id;
     const profileId = req.params.profileId;
-    const { name, pin } = req.body;
+    const { name, pin, oldPin } = req.body;
     const avatar = req.body.avatar; // Optional string URL fallback
     const avatarFile = req.file;
 
-    const profile = await profileController.updateProfile(userId, profileId, { name, avatar, pin, avatarFile });
+    const profile = await profileController.updateProfile(userId, profileId, { name, avatar, pin, oldPin, avatarFile });
 
     res.send(resultDTO.success({
       id: profile.id,
@@ -73,8 +73,9 @@ router.delete("/:profileId", CheckLogin, async (req, res) => {
   try {
     const userId = req.user.id;
     const profileId = req.params.profileId;
+    const { pin } = req.body;
 
-    await profileController.deleteProfile(userId, profileId);
+    await profileController.deleteProfile(userId, profileId, pin);
     res.send(resultNoData.success("Xóa tài khoản con thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));

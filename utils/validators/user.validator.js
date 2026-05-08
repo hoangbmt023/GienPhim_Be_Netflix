@@ -8,9 +8,16 @@ const UserRegisterRequestValidator = [
     .withMessage("Email không đúng định dạng"),
   body("password")
     .notEmpty()
-    .withMessage("Mật khẩu không được để trống")
-    .isLength({ min: 6 })
-    .withMessage("Mật khẩu phải có ít nhất 6 ký tự"),
+    .withMessage("password khong duoc rong")
+    .bail()
+    .isStrongPassword({
+      minLength: 8,
+      minLowercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+      minUppercase: 1,
+    })
+    .withMessage("Mật khẩu phải có chữ hoa, chữ thường và số"),
 ];
 
 const UpdateRoleRequestValidator = [

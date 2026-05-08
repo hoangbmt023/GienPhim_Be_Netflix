@@ -138,7 +138,10 @@ const MovieController = {
       }
     });
 
-    return !!existing;
+    return {
+      isFavorited: !!existing,
+      favoriteId: existing ? existing.id : null
+    };
   },
 
   deleteFavorite: async function (profileId, favoriteId) {

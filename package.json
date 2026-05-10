@@ -2,11 +2,11 @@
   "name": "giencar_api_nodejs",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "bin/www",
   "scripts": {
-    "start": "npm run dev",
+    "start": "node ./bin/www",
     "dev": "cross-env NODE_ENV=develop nodemon ./bin/www --legacy-watch --watch",
-    "prod": "cross-env NODE_ENV=product node ./bin/www"
+    "prod": "cross-env NODE_ENV=production node ./bin/www"
   },
   "keywords": [],
   "author": "",

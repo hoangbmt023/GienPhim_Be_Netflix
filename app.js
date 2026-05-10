@@ -7,9 +7,23 @@ const prisma = require("./config/prisma");
 
 var app = express();
 
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+].filter(Boolean); // Lọc bỏ nếu CLIENT_URL chưa có
+
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: function(origin, callback) {
+            // Cho phép nếu không có origin (mobile app, postman, curl) 
+            // hoặc origin nằm trong danh sách allowedOrigins
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
     }),
 );

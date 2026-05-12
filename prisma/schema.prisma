@@ -21,16 +21,17 @@ enum UserStatus {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  role          Role           @default(USER)
-  status        UserStatus     @default(PENDING)
-  isDeleted     Boolean        @default(false)
-  profiles      Profile[]
-  refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  role           Role            @default(USER)
+  status         UserStatus      @default(PENDING)
+  isDeleted      Boolean         @default(false)
+  profiles       Profile[]
+  refreshTokens  RefreshToken[]
+  contactTickets ContactTicket[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Profile {
@@ -47,6 +48,8 @@ model Profile {
   // Relations to histories and lists
   histories History[]
   favorites Favorite[]
+
+  @@index([userId])
 }
 
 model Movie {
@@ -100,4 +103,30 @@ model RefreshToken {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiryDate DateTime
   createdAt  DateTime @default(now())
+}
+
+enum ContactStatus {
+  OPEN        // Mới gửi, chưa xử lý
+  IN_PROGRESS // Moderator đang xem xét
+  REPLIED     // Đã phản hồi người dùng
+  CLOSED      // Đóng ticket
+}
+
+model ContactTicket {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  subject     String
+  message     String        @db.Text
+  status      ContactStatus @default(OPEN)
+  reply       String?       @db.Text  // Nội dung phản hồi từ Moderator
+  repliedById String?                 // ID của Moderator đã phản hồi
+  repliedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

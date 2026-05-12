@@ -96,4 +96,22 @@ router.post("/:profileId/switch", CheckLogin, SwitchProfileRequestValidator, val
   }
 });
 
+// Reset PIN using account password
+router.post("/:profileId/reset-pin", CheckLogin, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const profileId = req.params.profileId;
+    const { password, newPin } = req.body;
+
+    if (!password) {
+      return res.status(400).send(resultNoData.fail("Vui lòng nhập mật khẩu tài khoản."));
+    }
+
+    await profileController.resetPinWithPassword(userId, profileId, password, newPin);
+    res.send(resultNoData.success("Đặt lại mã PIN thành công."));
+  } catch (error) {
+    res.status(error.status || 500).send(resultNoData.fail(error.message));
+  }
+});
+
 module.exports = router;

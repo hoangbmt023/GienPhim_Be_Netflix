@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Có liên hệ mới - GienPhim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f6f6f6;
+            color: #1a1a1a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .outer-wrapper {
+            background-color: #f6f6f6;
+            padding: 40px 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 45px;
+            border-radius: 8px;
+        }
+        .logo-top { margin-bottom: 35px; }
+        .logo-top img { width: 52px; height: 52px; border-radius: 12px; }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 25px;
+            color: #000000;
+            letter-spacing: -0.5px;
+        }
+        .sub-text {
+            font-size: 17px;
+            color: #333333;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+        .gray-box {
+            background-color: #f0f0f0;
+            padding: 30px 25px;
+            text-align: left;
+            margin-bottom: 35px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .gray-box strong {
+            display: block;
+            margin-top: 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 0.8px;
+        }
+        .gray-box strong:first-child { margin-top: 0; }
+        .ticket-data {
+            font-size: 16px;
+            color: #000;
+            margin-top: 5px;
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        .message-box {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #222;
+            white-space: pre-wrap;
+        }
+        .info-text {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .btn-primary {
+            display: inline-block;
+            background-color: #e50914;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+        }
+        .footer-box {
+            background-color: #f0f0f0;
+            padding: 35px;
+            margin-top: 45px;
+            border-radius: 6px;
+            text-align: left;
+        }
+        .footer-logo { margin-bottom: 20px; }
+        .footer-logo img { width: 32px; height: 32px; border-radius: 8px; }
+        .company-info {
+            font-size: 15px;
+            color: #1a1a1a;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+        .footer-links-row { margin-bottom: 12px; }
+        .footer-links-row a {
+            color: #0052cc;
+            text-decoration: none;
+            font-size: 15px;
+            margin-right: 25px;
+            font-weight: 700;
+        }
+        @media only screen and (max-width: 600px) {
+            .outer-wrapper { padding: 0 !important; }
+            .container { width: 100% !important; padding: 25px !important; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="outer-wrapper">
+        <div class="container">
+            <!-- Logo -->
+            <div class="logo-top">
+                <img src="cid:logo_vuong" alt="GienPhim Logo">
+            </div>
+
+            <!-- Heading -->
+            <h1>Có liên hệ hỗ trợ mới</h1>
+
+            <!-- Subtext -->
+            <p class="sub-text">Xin chào Moderator,<br>Hệ thống vừa tiếp nhận một yêu cầu hỗ trợ mới từ người dùng.</p>
+
+            <!-- Gray Box -->
+            <div class="gray-box">
+                <strong>Ticket ID</strong>
+                <p class="ticket-data">#<%= ticketId.slice(0, 8).toUpperCase() %></p>
+
+                <strong>Người gửi</strong>
+                <p class="ticket-data"><%= name %> (<%= email %>)</p>
+
+                <strong>Chủ đề</strong>
+                <p class="ticket-data" style="color: #e50914;"><%= subject %></p>
+
+                <strong>Thời gian</strong>
+                <p class="ticket-data"><%= createdAt %></p>
+
+                <strong>Nội dung tin nhắn</strong>
+                <div class="message-box"><%= message %></div>
+            </div>
+
+            <!-- Warning/Info -->
+            <p class="info-text">
+                Vui lòng truy cập trang quản trị để xem chi tiết và phản hồi cho khách hàng.
+            </p>
+            <div style="text-align: center;">
+                <a href="<%= dashboardUrl %>" class="btn-primary">Đi tới Trang Quản Lý</a>
+            </div>
+
+            <!-- Footer Box -->
+            <div class="footer-box">
+                <div class="footer-logo">
+                    <img src="cid:logo_vuong" alt="GienPhim Logo">
+                </div>
+                <div class="company-info">
+                    <strong>GienPhim - Dịch vụ xem phim trực tuyến cao cấp.</strong><br>
+                    Quận 1, TP. Hồ Chí Minh, Vietnam.
+                </div>
+                <div class="footer-links-row">
+                    <a href="https://gienphim.site">Trang chủ</a>
+                    <a href="https://gienphim.site/lien-he">Trợ giúp & Hỗ trợ</a>
+                </div>
+                <div class="footer-links-row">
+                    <a href="https://gienphim.site/dieu-khoan-su-dung">Điều khoản sử dụng</a>
+                    <a href="https://gienphim.site/chinh-sach-bao-mat">Chính sách bảo mật</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -72,6 +72,24 @@ const sendOtpEmail = async (to, otp) => {
   await sendHtmlEmail(to, "Mã xác thực của bạn", appendTrackingId(html));
 };
 
+// Gửi thông báo ticket mới đến tất cả Moderator
+const sendContactNotifyModEmail = async (to, { ticketId, name, email, subject, message, createdAt }) => {
+  const dashboardUrl = `${process.env.CLIENT_URL}/moderator`;
+  const html = await renderTemplate("contact-notify-mod", {
+    ticketId, name, email, subject, message, createdAt, dashboardUrl
+  });
+  await sendHtmlEmail(to, `[GienPhim] Liên hệ mới từ ${name}: ${subject}`, appendTrackingId(html));
+};
+
+// Gửi phản hồi từ Moderator đến người dùng
+const sendContactReplyUserEmail = async (to, { name, subject, originalMessage, reply }) => {
+  const siteUrl = process.env.CLIENT_URL || "https://gienphim.site";
+  const html = await renderTemplate("contact-reply-user", {
+    name, subject, originalMessage, reply, siteUrl
+  });
+  await sendHtmlEmail(to, `[GienPhim] Phản hồi yêu cầu hỗ trợ: ${subject}`, appendTrackingId(html));
+};
+
 const sendOrderPaidEmail = async (to, order) => {
   let html = await renderTemplate("order-paid-email", { order });
 
@@ -125,4 +143,6 @@ module.exports = {
   sendOrderConfirmedEmail,
   sendBookingConfirmedEmail,
   sendBookingFailedEmail,
+  sendContactNotifyModEmail,
+  sendContactReplyUserEmail,
 };

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phản hồi hỗ trợ - GienPhim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f6f6f6;
+            color: #1a1a1a;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .outer-wrapper {
+            background-color: #f6f6f6;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 45px;
+            border-radius: 8px;
+        }
+
+        .logo-top {
+            margin-bottom: 35px;
+        }
+
+        .logo-top img {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 600;
+            line-height: 1.25;
+            margin-bottom: 25px;
+            color: #000000;
+            letter-spacing: -0.5px;
+        }
+
+        .sub-text {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+
+        .gray-box {
+            background-color: #c4c7c5;
+            padding: 10px 25px 30px 25px;
+            text-align: left;
+            margin-bottom: 35px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .gray-box>strong {
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #444;
+            letter-spacing: 0.5px;
+        }
+
+        .gray-box>strong:first-child {
+            margin-top: 0;
+        }
+
+        .message-data strong {
+            color: #000;
+            font-weight: 700;
+        }
+
+        .reply-block-body strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .message-data {
+            font-size: 16px;
+            color: #111;
+            margin-top: 5px;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .reply-block {
+            background: #1e1e1e;
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .reply-block-header {
+            background: #e50914;
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .reply-block-body {
+            font-size: 16px;
+            color: #f0f0f0;
+            line-height: 1.6;
+            padding: 15px;
+        }
+
+        .info-text {
+            font-size: 16px;
+            color: #444444;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: #e50914;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .footer-box {
+            background-color: #f0f0f0;
+            padding: 35px;
+            margin-top: 45px;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        .footer-logo {
+            margin-bottom: 20px;
+        }
+
+        .footer-logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .company-info {
+            font-size: 15px;
+            color: #1a1a1a;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .footer-links-row {
+            margin-bottom: 12px;
+        }
+
+        .footer-links-row a {
+            color: #0052cc;
+            text-decoration: none;
+            font-size: 15px;
+            margin-right: 25px;
+            font-weight: 700;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .outer-wrapper {
+                padding: 0 !important;
+            }
+
+            .container {
+                width: 100% !important;
+                padding: 25px !important;
+            }
+
+            h1 {
+                font-size: 26px !important;
+            }
+        }
+
+        /* Markdown Tags */
+        .message-data h3 {
+            margin: 15px 0 10px;
+            font-size: 18px;
+            color: #000;
+        }
+
+        .reply-block-body h3 {
+            margin: 15px 0 10px;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .message-data blockquote {
+            border-left: 4px solid #c4c7c5;
+            margin: 10px 0;
+            padding: 5px 15px;
+            background: rgba(0, 0, 0, 0.03);
+            color: #555;
+        }
+
+        .reply-block-body blockquote {
+            border-left: 4px solid #e50914;
+            margin: 10px 0;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <% const renderMarkdown=(text)=> {
+        if (!text) return '';
+        // Escape HTML
+        let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;' ) .replace( />/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+        // Simple Markdown
+        html = html
+        .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        .replace(/^&gt; (.*$)/gm, '<blockquote>$1</blockquote>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #3b82f6; text-decoration: none;">$1</a>')
+        .replace(/\n/g, '<br />');
+
+        return html;
+        };
+        %>
+        <div class="outer-wrapper">
+            <div class="container">
+                <!-- Logo -->
+                <div class="logo-top">
+                    <img src="cid:logo_vuong" alt="GienPhim Logo">
+                </div>
+
+                <!-- Heading -->
+                <h1>GienPhim đã phản hồi yêu cầu của bạn</h1>
+
+                <!-- Subtext -->
+                <p class="sub-text">Xin chào <strong>
+                        <%= name %>
+                    </strong>,<br>Cảm ơn bạn đã liên hệ với GienPhim. Đội ngũ hỗ trợ đã xem xét yêu cầu của bạn và gửi
+                    phản hồi bên dưới.</p>
+
+                <!-- Gray Box -->
+                <div class="gray-box">
+                    <strong>Chủ đề yêu cầu</strong>
+                    <div class="message-data" style="font-weight: 600;">
+                        <%= subject %>
+                    </div>
+
+                    <strong>Nội dung bạn gửi</strong>
+                    <div class="message-data"><%- renderMarkdown(originalMessage) %></div>
+
+                    <strong>Phản hồi từ GienPhim</strong>
+                    <div class="reply-block">
+                        <div class="reply-block-header">Hỗ trợ viên GienPhim</div>
+                        <div class="reply-block-body"><%- renderMarkdown(reply) %></div>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <p class="info-text">
+                    Nếu bạn có thêm câu hỏi, hãy truy cập trang Liên hệ &amp; Hỗ trợ để tiếp tục trao đổi. Vui lòng
+                    không trả lời email tự động này.
+                </p>
+                <div style="text-align: center;">
+                    <a href="<%= siteUrl %>" class="btn-primary">Truy cập GienPhim</a>
+                </div>
+
+                <!-- Footer Box -->
+                <div class="footer-box">
+                    <div class="footer-logo">
+                        <img src="cid:logo_vuong" alt="GienPhim Logo">
+                    </div>
+                    <div class="company-info">
+                        <strong>GienPhim - Dịch vụ xem phim trực tuyến cao cấp.</strong><br>
+                        Quận 1, TP. Hồ Chí Minh, Vietnam.
+                    </div>
+                    <div class="footer-links-row">
+                        <a href="https://gienphim.site">Trang chủ</a>
+                        <a href="https://gienphim.site/lien-he">Trợ giúp & Hỗ trợ</a>
+                    </div>
+                    <div class="footer-links-row">
+                        <a href="https://gienphim.site/dieu-khoan-su-dung">Điều khoản sử dụng</a>
+                        <a href="https://gienphim.site/chinh-sach-bao-mat">Chính sách bảo mật</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

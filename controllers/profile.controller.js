@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const bcrypt = require("bcrypt");
 const ApiError = require("../utils/errors/api-error");
 const { generateProfileToken } = require("../utils/jwt/jwt.util");
 const mediaUtil = require("../utils/media.util");
@@ -168,6 +169,35 @@ const ProfileController = {
       where: { id: profileId },
       data: { isDeleted: true }
     });
+  },
+
+  resetPinWithPassword: async function (userId, profileId, accountPassword, newPin) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.isDeleted) {
+      throw ApiError.unauthorized("Tài khoản không hợp lệ.");
+    }
+
+    // Verify parent account password
+    const isMatch = await bcrypt.compare(accountPassword, user.password);
+    if (!isMatch) {
+      throw ApiError.unauthorized("Mật khẩu tài khoản không chính xác.");
+    }
+
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId, isDeleted: false }
+    });
+
+    if (!profile) {
+      throw ApiError.notFound("Không tìm thấy hồ sơ.");
+    }
+
+    // Update with new PIN (or remove if newPin is empty)
+    const updatedProfile = await prisma.profile.update({
+      where: { id: profileId },
+      data: { pin: newPin || null }
+    });
+
+    return updatedProfile;
   }
 };
 

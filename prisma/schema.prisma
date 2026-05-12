@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BANNED
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  role           Role            @default(USER)
+  status         UserStatus      @default(PENDING)
+  isDeleted      Boolean         @default(false)
+  profiles       Profile[]
+  refreshTokens  RefreshToken[]
+  contactTickets ContactTicket[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  avatar    String?
+  pin       String?  // Optional PIN for profile lock
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations to histories and lists
+  histories History[]
+  favorites Favorite[]
+
+  @@index([userId])
+}
+
+model Movie {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  name              String
+  thumb_url         String
+  poster_url        String?
+  type              String?
+  quality           String?
+  lang              String?
+  year              Int?
+  view              Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  histories         History[]
+  favorites         Favorite[]
+}
+
+model History {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  episode   String?  // Which episode
+  timePos   Int?     // Time watched in seconds
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, movieId])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, movieId])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiryDate DateTime
+  createdAt  DateTime @default(now())
+}
+
+enum ContactStatus {
+  OPEN        // Mới gửi, chưa xử lý
+  IN_PROGRESS // Moderator đang xem xét
+  REPLIED     // Đã phản hồi người dùng
+  CLOSED      // Đóng ticket
+}
+
+model ContactTicket {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  subject     String
+  message     String        @db.Text
+  status      ContactStatus @default(OPEN)
+  reply       String?       @db.Text  // Nội dung phản hồi từ Moderator
+  repliedById String?                 // ID của Moderator đã phản hồi
+  repliedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

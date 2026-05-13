@@ -78,6 +78,7 @@ model History {
   movieId   String
   movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
   episode   String?  // Which episode
+  server    Int?     // Which server index (0, 1, 2...)
   timePos   Int?     // Time watched in seconds
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

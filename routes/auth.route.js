@@ -198,26 +198,8 @@ router.post(
   async function (req, res, next) {
     try {
       let { email, otp } = req.body;
-
-      let user = await UserController.findByEmail(email);
-
-      let otpLocal = otpMemory.get(user.email);
-
-      if (!otpLocal) {
-        throw ApiError.badRequest("OTP không hợp lệ hoặc đã hết hạn");
-      }
-
-      otpModel.verifyOtp(otpLocal, otp);
-
-      otpMemory.remove(user.email);
-
-      await UserController.saveUser(user.id, {
-        status: "ACTIVE",
-      });
-
-      res
-        .status(200)
-        .send(resultNoData.success("kích hoạt tài khoản thành công"));
+      await userController.activateAccount(email, otp);
+      res.status(200).send(resultNoData.success("Kích hoạt tài khoản thành công"));
     } catch (error) {
       return res
         .status(error.status || 500)
@@ -313,9 +295,14 @@ router.post(
 
       otpMemory.remove(user.email);
 
-      await UserController.saveUser(user.id, {
-        status: "ACTIVE",
-      });
+      // Only activate if it was PENDING. If it's already ACTIVE, keep it. 
+      // If it's BANNED, forgot-password would have blocked it anyway, 
+      // but let's be safe and only change PENDING status.
+      if (user.status === "PENDING") {
+        await UserController.saveUser(user.id, {
+          status: "ACTIVE",
+        });
+      }
 
       await UserController.changePassword(user.id, newPassword);
 

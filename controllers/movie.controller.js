@@ -162,13 +162,14 @@ const MovieController = {
     });
   },
 
-  saveHistory: async function (profileId, slug, episode, timePos) {
+  saveHistory: async function (profileId, slug, episode, server, timePos) {
     let movie = await prisma.movie.findUnique({ where: { slug } });
     if (!movie) {
       movie = await this.checkAndSaveMovie(slug);
     }
 
     const tPos = timePos ? parseInt(timePos) : 0;
+    const serverIdx = (server !== undefined && server !== null) ? parseInt(server) : 0;
 
     const history = await prisma.history.upsert({
       where: {
@@ -179,6 +180,7 @@ const MovieController = {
       },
       update: {
         episode: episode,
+        server: serverIdx,
         timePos: tPos,
         updatedAt: new Date()
       },
@@ -186,6 +188,7 @@ const MovieController = {
         profileId: profileId,
         movieId: movie.id,
         episode: episode,
+        server: serverIdx,
         timePos: tPos
       }
     });
@@ -220,6 +223,7 @@ const MovieController = {
       data: histories.map(h => ({
         id: h.id,
         episode: h.episode,
+        server: h.server ?? 0,
         timePos: h.timePos,
         updatedAt: h.updatedAt,
         ...h.movie

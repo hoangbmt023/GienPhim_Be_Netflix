@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "5.22.0",
     "axios": "^1.14.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
@@ -38,6 +38,6 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "prisma": "^6.2.1"
+    "prisma": "5.22.0"
   }
 }

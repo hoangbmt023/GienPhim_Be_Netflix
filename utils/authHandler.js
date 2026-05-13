@@ -13,8 +13,15 @@ module.exports = {
 
       const token = authHeader.split(" ")[1];
 
-      const {decoded} = verifyAccessToken(token);
+      const result = verifyAccessToken(token);
+      
+      // result could be an ApiError if verification failed
+      if (!result || !result.decoded) {
+        const message = result?.message || "Token không hợp lệ";
+        return res.status(401).send(resultNoData.fail(message));
+      }
 
+      const decoded = result.decoded;
       const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
 
       if (!user || user.isDeleted) {
@@ -24,7 +31,7 @@ module.exports = {
       req.user = user;
       next();
     } catch (error) {
-      return res.status(401).send(resultNoData.fail("Token không hợp lệ"));
+      return res.status(401).send(resultNoData.fail("Token không hợp lệ hoặc đã hết hạn"));
     }
   },
 

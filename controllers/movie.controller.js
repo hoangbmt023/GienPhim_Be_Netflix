@@ -26,13 +26,6 @@ const MovieController = {
       movie = await prisma.movie.create({
         data: {
           slug: item.slug,
-          name: item.name,
-          thumb_url: item.thumb_url || "",
-          poster_url: item.poster_url || "",
-          type: item.type || "",
-          quality: item.quality || "",
-          lang: item.lang || "",
-          year: item.year || null,
         }
       });
 
@@ -64,13 +57,8 @@ const MovieController = {
         include: {
           movie: {
             select: {
-              name: true,
-              slug: true,
-              thumb_url: true,
-              poster_url: true,
-              quality: true,
-              lang: true,
-              year: true
+              id: true,
+              slug: true
             }
           }
         }
@@ -81,8 +69,10 @@ const MovieController = {
     return {
       data: favorites.map(f => ({
         id: f.id,
-        createdAt: f.createdAt,
-        ...f.movie
+        favoriteId: f.id,
+        movieId: f.movie.id,
+        slug: f.movie.slug,
+        createdAt: f.createdAt
       })),
       pagination: {
         page,
@@ -162,7 +152,7 @@ const MovieController = {
     });
   },
 
-  saveHistory: async function (profileId, slug, episode, server, timePos) {
+  saveHistory: async function (profileId, slug, episode, episodeSlug, server, timePos) {
     let movie = await prisma.movie.findUnique({ where: { slug } });
     if (!movie) {
       movie = await this.checkAndSaveMovie(slug);
@@ -180,6 +170,7 @@ const MovieController = {
       },
       update: {
         episode: episode,
+        episodeSlug: episodeSlug,
         server: serverIdx,
         timePos: tPos,
         updatedAt: new Date()
@@ -188,6 +179,7 @@ const MovieController = {
         profileId: profileId,
         movieId: movie.id,
         episode: episode,
+        episodeSlug: episodeSlug,
         server: serverIdx,
         timePos: tPos
       }
@@ -206,11 +198,8 @@ const MovieController = {
         include: {
           movie: {
             select: {
-              name: true,
-              slug: true,
-              thumb_url: true,
-              quality: true,
-              lang: true
+              id: true,
+              slug: true
             }
           }
         },
@@ -221,12 +210,16 @@ const MovieController = {
 
     return {
       data: histories.map(h => ({
-        id: h.id,
-        episode: h.episode,
-        server: h.server ?? 0,
+        id: h.movie.id,
+        historyId: h.id,
+        slug: h.movie.slug,
         timePos: h.timePos,
         updatedAt: h.updatedAt,
-        ...h.movie
+        episode: {
+          name: h.episode,
+          slug: h.episodeSlug,
+          server: h.server ?? 0
+        }
       })),
       pagination: {
         page,

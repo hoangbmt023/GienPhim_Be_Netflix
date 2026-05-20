@@ -55,14 +55,6 @@ model Profile {
 model Movie {
   id                String   @id @default(uuid())
   slug              String   @unique
-  name              String
-  thumb_url         String
-  poster_url        String?
-  type              String?
-  quality           String?
-  lang              String?
-  year              Int?
-  view              Int      @default(0)
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -77,7 +69,8 @@ model History {
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   movieId   String
   movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode   String?  // Which episode
+  episode   String?  // Which episode name
+  episodeSlug String? // Which episode slug
   server    Int?     // Which server index (0, 1, 2...)
   timePos   Int?     // Time watched in seconds
   createdAt DateTime @default(now())

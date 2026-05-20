@@ -92,7 +92,7 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500).json({
         success: false,
         message: err.message || "Internal Server Error",
-        stack: process.env.NODE_ENV === 'develop' ? err.stack : undefined
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
 

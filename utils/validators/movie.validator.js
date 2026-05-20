@@ -9,6 +9,10 @@ const SaveHistoryRequestValidator = [
     .optional()
     .isString()
     .withMessage("Tập phim phải là chuỗi"),
+  body("episodeSlug")
+    .optional()
+    .isString()
+    .withMessage("Slug tập phim phải là chuỗi"),
   body("timePos")
     .optional()
     .isNumeric()

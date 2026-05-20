@@ -85,13 +85,13 @@ router.get("/history", CheckLogin, CheckProfile, async (req, res) => {
 router.post("/history", CheckLogin, CheckProfile, SaveHistoryRequestValidator, validateResult, async (req, res) => {
   try {
     const profileId = req.profile.id;
-    const { slug, episode, server, timePos } = req.body;
+    const { slug, episode, episodeSlug, server, timePos } = req.body;
 
     if (!slug) {
       return res.status(400).send(resultNoData.fail("Thiếu slug phim."));
     }
 
-    const history = await movieController.saveHistory(profileId, slug, episode, server, timePos);
+    const history = await movieController.saveHistory(profileId, slug, episode, episodeSlug, server, timePos);
 
     res.send(resultDTO.success(history, "Lưu lịch sử xem phim thành công."));
   } catch (error) {

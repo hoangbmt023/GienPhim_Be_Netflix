@@ -9,6 +9,7 @@
 GienPhim Backend is a robust, scalable REST API built with **Express.js** and **Prisma ORM** that powers a full-featured movie streaming platform. It handles user authentication, profile management, watch history tracking, favorites lists, and contact support with admin controls.
 
 **Key Features:**
+
 - ✅ JWT-based authentication with refresh token rotation
 - ✅ User roles (USER, MODERATOR, ADMIN) with permission control
 - ✅ Sub-account profiles with PIN protection
@@ -23,19 +24,19 @@ GienPhim Backend is a robust, scalable REST API built with **Express.js** and **
 
 ## 📋 Tech Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Node.js** | 18.x+ | JavaScript runtime |
-| **Express.js** | 5.x | Web framework |
-| **Prisma** | 5.22.0 | ORM & database management |
-| **MySQL** | 8.0+ | Primary database |
-| **JWT** | 9.0.3 | Authentication tokens |
-| **Bcrypt** | 6.0.0 | Password hashing |
-| **Nodemailer** | 8.0.4 | Email sending |
-| **Cloudinary** | 2.9.0 | Image upload & CDN |
-| **Express Validator** | 7.3.2 | Request validation |
-| **Multer** | 2.1.1 | File upload handling |
-| **Socket.io** | 4.8.3 | Real-time communication |
+| Technology            | Version | Purpose                   |
+| --------------------- | ------- | ------------------------- |
+| **Node.js**           | 18.x+   | JavaScript runtime        |
+| **Express.js**        | 5.x     | Web framework             |
+| **Prisma**            | 5.22.0  | ORM & database management |
+| **MySQL**             | 8.0+    | Primary database          |
+| **JWT**               | 9.0.3   | Authentication tokens     |
+| **Bcrypt**            | 6.0.0   | Password hashing          |
+| **Nodemailer**        | 8.0.4   | Email sending             |
+| **Cloudinary**        | 2.9.0   | Image upload & CDN        |
+| **Express Validator** | 7.3.2   | Request validation        |
+| **Multer**            | 2.1.1   | File upload handling      |
+| **Socket.io**         | 4.8.3   | Real-time communication   |
 
 ---
 
@@ -251,6 +252,7 @@ If accessToken expired (401):
 ### Core Models
 
 **User**
+
 ```prisma
 model User {
   id              String @id @default(uuid())
@@ -271,6 +273,7 @@ enum UserStatus { PENDING, ACTIVE, BANNED }
 ```
 
 **Profile** (Sub-Account)
+
 ```prisma
 model Profile {
   id          String @id @default(uuid())
@@ -288,6 +291,7 @@ model Profile {
 ```
 
 **Movie**
+
 ```prisma
 model Movie {
   id          String @id @default(uuid())
@@ -300,6 +304,7 @@ model Movie {
 ```
 
 **History** (Watch Progress)
+
 ```prisma
 model History {
   id          String @id @default(uuid())
@@ -313,12 +318,13 @@ model History {
   timePos     Int? (seconds watched)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([profileId, movieId])
 }
 ```
 
 **Favorite** (Saved Movies)
+
 ```prisma
 model Favorite {
   id          String @id @default(uuid())
@@ -327,7 +333,7 @@ model Favorite {
   movieId     String
   movie       Movie @relation(fields: [movieId])
   createdAt   DateTime @default(now())
-  
+
   @@unique([profileId, movieId])
 }
 ```
@@ -337,6 +343,7 @@ model Favorite {
 ## 📡 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `POST /api/auth/refresh-token` - Get new access token
@@ -348,6 +355,7 @@ model Favorite {
 - `POST /api/auth/revoke-token` - Admin revoke user token
 
 ### Users (Admin/Moderator)
+
 - `GET /api/users` - List all users
 - `PUT /api/users/{id}/ban` - Ban user account
 - `PUT /api/users/{id}/unban` - Unban user
@@ -355,6 +363,7 @@ model Favorite {
 - `DELETE /api/users/{id}` - Delete user
 
 ### Profiles
+
 - `GET /api/profiles` - Get user's profiles
 - `POST /api/profiles` - Create new profile
 - `PUT /api/profiles/{id}` - Update profile
@@ -363,6 +372,7 @@ model Favorite {
 - `POST /api/profiles/{id}/reset-pin` - Reset PIN
 
 ### Movies
+
 - `GET /api/movies/favorites` - Get favorites list
 - `POST /api/movies/favorites` - Add to favorites
 - `GET /api/movies/favorites/check/{slug}` - Check if favorite
@@ -373,6 +383,7 @@ model Favorite {
 - `GET /api/movies/{slug}` - Get movie details
 
 ### Contact/Support
+
 - `POST /api/contact` - Create support ticket
 - `GET /api/contact/my` - Get user's tickets
 - `GET /api/contact` - Get all tickets (admin)
@@ -385,6 +396,7 @@ model Favorite {
 ## 🔑 Request/Response Examples
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
@@ -395,6 +407,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -407,6 +420,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 ```
 
 ### Get Favorites
+
 ```bash
 curl -X GET "http://localhost:8080/api/movies/favorites?page=1&size=20" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -457,6 +471,7 @@ curl -X GET http://localhost:8080/api/profiles \
 ### Common Issues
 
 **Port Already in Use**
+
 ```bash
 # Change port in .env
 PORT=8081
@@ -467,6 +482,7 @@ kill -9 <PID>
 ```
 
 **Database Connection Failed**
+
 ```bash
 # Verify DATABASE_URL in .env
 # Test connection:
@@ -477,6 +493,7 @@ mysql -u user -p -h localhost -D gienphim_db
 ```
 
 **OTP Not Received**
+
 ```bash
 # Verify SMTP configuration
 # Check email templates in templates/email/
@@ -486,6 +503,7 @@ npm run test:email
 ```
 
 **Token Validation Errors**
+
 ```bash
 # JWT secret mismatch - ensure same secret in:
 # - .env file
@@ -596,6 +614,7 @@ This project is licensed under the ISC License - see LICENSE file for details.
 ## 👨‍💻 Author
 
 **Hoang Bmt**
+
 - GitHub: [@hoangbmt023](https://github.com/hoangbmt023)
 - Email: hoangbmt023@gmail.com
 
@@ -607,4 +626,4 @@ For issues and feature requests: [GitHub Issues](https://github.com/yourusername
 
 ---
 
-**Last Updated**: May 2026  
+**Last Updated**: May 2026

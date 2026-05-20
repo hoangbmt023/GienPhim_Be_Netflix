@@ -960,15 +960,15 @@ avatarFile: <file> (optional)
 
 ### HTTP Status Codes
 
-| Code | Meaning | Example |
-|------|---------|---------|
-| 200 | OK | Success |
-| 201 | Created | New resource created |
-| 400 | Bad Request | Validation error |
-| 401 | Unauthorized | Token expired |
-| 403 | Forbidden | Access denied |
-| 404 | Not Found | Resource not found |
-| 500 | Server Error | Database error |
+| Code | Meaning      | Example              |
+| ---- | ------------ | -------------------- |
+| 200  | OK           | Success              |
+| 201  | Created      | New resource created |
+| 400  | Bad Request  | Validation error     |
+| 401  | Unauthorized | Token expired        |
+| 403  | Forbidden    | Access denied        |
+| 404  | Not Found    | Resource not found   |
+| 500  | Server Error | Database error       |
 
 ---
 

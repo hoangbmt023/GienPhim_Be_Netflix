@@ -23,13 +23,14 @@ router.get("/active", async function (req, res) {
 });
 
 // ── ADMIN + MODERATOR: Lấy tất cả (có filter/paging) ────
+// ADMIN thêm ?deleted=true để xem thùng rác
 router.get(
   "/",
   CheckLogin,
   CheckRole("ADMIN", "MODERATOR"),
   async function (req, res) {
     try {
-      const result = await AnnouncementController.getAll(req.query);
+      const result = await AnnouncementController.getAll(req.query, req.user.role);
       res.send(
         resultList.success(result.data, "Lấy danh sách thông báo thành công", result.pagination)
       );
@@ -127,7 +128,7 @@ router.patch(
   }
 );
 
-// ── Chỉ ADMIN: Xóa ─────────────────────────────────────
+// ── Chỉ ADMIN: Xóa mềm ─────────────────────────────────
 router.delete(
   "/:id",
   CheckLogin,
@@ -135,7 +136,37 @@ router.delete(
   async function (req, res) {
     try {
       await AnnouncementController.remove(req.params.id);
-      res.send(resultNoData.success("Xóa thông báo thành công"));
+      res.send(resultNoData.success("Đã xóa thông báo (có thể khôi phục)"));
+    } catch (err) {
+      res.status(err.status || 500).send(resultNoData.fail(err.message));
+    }
+  }
+);
+
+// ── Chỉ ADMIN: Khôi phục xóa mềm ──────────────────────
+router.patch(
+  "/:id/restore",
+  CheckLogin,
+  CheckRole("ADMIN"),
+  async function (req, res) {
+    try {
+      const ann = await AnnouncementController.restore(req.params.id);
+      res.send(resultDTO.success(ann, "Đã khôi phục thông báo"));
+    } catch (err) {
+      res.status(err.status || 500).send(resultNoData.fail(err.message));
+    }
+  }
+);
+
+// ── Chỉ ADMIN: Xóa vĩnh viễn ───────────────────────────
+router.delete(
+  "/:id/force",
+  CheckLogin,
+  CheckRole("ADMIN"),
+  async function (req, res) {
+    try {
+      await AnnouncementController.forceDelete(req.params.id);
+      res.send(resultNoData.success("Đã xóa vĩnh viễn thông báo"));
     } catch (err) {
       res.status(err.status || 500).send(resultNoData.fail(err.message));
     }

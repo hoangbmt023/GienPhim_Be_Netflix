@@ -159,6 +159,8 @@ model Announcement {
   display     AnnouncementDisplay @default(BAR)
   scope       AnnouncementScope   @default(MARKETING)
   isActive    Boolean             @default(false) // Publish/Unpublish
+  isDeleted   Boolean             @default(false) // Soft delete
+  deletedAt   DateTime?           // Thời điểm xóa mềm
   startAt     DateTime?           // Ngày bắt đầu hiển thị (null = hiển thị ngay)
   endAt       DateTime?           // Ngày kết thúc hiển thị (null = vĩnh viễn)
   createdById String
@@ -168,6 +170,7 @@ model Announcement {
   updatedAt   DateTime            @updatedAt
 
   @@index([isActive, startAt, endAt]) // Optimize query lấy thông báo active
+  @@index([isDeleted])
   @@index([scope])
   @@index([createdById])
 }

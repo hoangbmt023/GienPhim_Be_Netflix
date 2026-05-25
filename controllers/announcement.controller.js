@@ -32,17 +32,16 @@ const canManageScope = (role, scope) => {
 const AnnouncementController = {
   /**
    * GET /api/announcements/active  (Public)
-   * Trả về các thông báo đang active & trong thời gian hiệu lực
+   * Chỉ lấy thông báo active & chưa bị xóa mềm
    */
   getActive: async function () {
     const now = new Date();
     const list = await prisma.announcement.findMany({
       where: {
         isActive: true,
+        isDeleted: false,
         OR: [{ startAt: null }, { startAt: { lte: now } }],
-        AND: [
-          { OR: [{ endAt: null }, { endAt: { gte: now } }] },
-        ],
+        AND: [{ OR: [{ endAt: null }, { endAt: { gte: now } }] }],
       },
       orderBy: { createdAt: "desc" },
       select: {
@@ -62,22 +61,25 @@ const AnnouncementController = {
 
   /**
    * GET /api/announcements  (ADMIN + MODERATOR)
+   * ADMIN truyền ?deleted=true để xem thùng rác
    */
-  getAll: async function (query) {
+  getAll: async function (query, role) {
     const { page, size, skip } = buildPaging(query);
+    const showDeleted = role === "ADMIN" && query.deleted === "true";
 
-    const filter = {};
+    const filter = { isDeleted: showDeleted };
     if (query.type) filter.type = query.type.toUpperCase();
     if (query.display) filter.display = query.display.toUpperCase();
     if (query.scope) filter.scope = query.scope.toUpperCase();
-    if (query.isActive !== undefined) filter.isActive = query.isActive === "true";
+    if (!showDeleted && query.isActive !== undefined)
+      filter.isActive = query.isActive === "true";
 
     const [data, total] = await Promise.all([
       prisma.announcement.findMany({
         where: filter,
         skip,
         take: size,
-        orderBy: { createdAt: "desc" },
+        orderBy: showDeleted ? { deletedAt: "desc" } : { createdAt: "desc" },
         include: { createdBy: { select: { id: true, email: true, role: true } } },
       }),
       prisma.announcement.count({ where: filter }),
@@ -118,7 +120,8 @@ const AnnouncementController = {
         type: (data.type || "INFO").toUpperCase(),
         display: (data.display || "BAR").toUpperCase(),
         scope,
-        isActive: false, // Mặc định draft, cần ADMIN publish
+        isActive: false,
+        isDeleted: false,
         startAt: data.startAt ? new Date(data.startAt) : null,
         endAt: data.endAt ? new Date(data.endAt) : null,
         createdById: userId,
@@ -134,6 +137,8 @@ const AnnouncementController = {
   update: async function (id, userId, role, data) {
     const existing = await prisma.announcement.findUnique({ where: { id } });
     if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (existing.isDeleted)
+      throw ApiError.badRequest("Thông báo đã bị xóa, không thể chỉnh sửa.");
 
     const scope = (data.scope || existing.scope).toUpperCase();
     if (!canManageScope(role, scope)) {
@@ -152,8 +157,14 @@ const AnnouncementController = {
         type: data.type ? data.type.toUpperCase() : existing.type,
         display: data.display ? data.display.toUpperCase() : existing.display,
         scope,
-        startAt: data.startAt !== undefined ? (data.startAt ? new Date(data.startAt) : null) : existing.startAt,
-        endAt: data.endAt !== undefined ? (data.endAt ? new Date(data.endAt) : null) : existing.endAt,
+        startAt:
+          data.startAt !== undefined
+            ? data.startAt ? new Date(data.startAt) : null
+            : existing.startAt,
+        endAt:
+          data.endAt !== undefined
+            ? data.endAt ? new Date(data.endAt) : null
+            : existing.endAt,
         updatedById: userId,
       },
     });
@@ -161,14 +172,14 @@ const AnnouncementController = {
   },
 
   /**
-   * PATCH /api/announcements/:id/publish  (Chỉ ADMIN)
-   * Moderator tạo MARKETING được publish luôn
+   * PATCH /api/announcements/:id/publish  (ADMIN + MODERATOR)
    */
   publish: async function (id, role) {
     const existing = await prisma.announcement.findUnique({ where: { id } });
     if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (existing.isDeleted)
+      throw ApiError.badRequest("Thông báo đã bị xóa, không thể publish.");
 
-    // MODERATOR chỉ publish được MARKETING scope
     if (role === "MODERATOR" && existing.scope === "SYSTEM") {
       throw ApiError.forbidden("Chỉ ADMIN mới có thể publish thông báo hệ thống.");
     }
@@ -185,6 +196,7 @@ const AnnouncementController = {
   unpublish: async function (id) {
     const existing = await prisma.announcement.findUnique({ where: { id } });
     if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (existing.isDeleted) throw ApiError.badRequest("Thông báo đã bị xóa.");
 
     return prisma.announcement.update({
       where: { id },
@@ -193,11 +205,52 @@ const AnnouncementController = {
   },
 
   /**
-   * DELETE /api/announcements/:id  (Chỉ ADMIN)
+   * DELETE /api/announcements/:id  (Chỉ ADMIN) — Xóa mềm
+   * Tự động unpublish và đánh dấu deletedAt
    */
   remove: async function (id) {
     const existing = await prisma.announcement.findUnique({ where: { id } });
     if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (existing.isDeleted)
+      throw ApiError.badRequest("Thông báo đã được xóa trước đó.");
+
+    return prisma.announcement.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+  },
+
+  /**
+   * PATCH /api/announcements/:id/restore  (Chỉ ADMIN) — Khôi phục xóa mềm
+   */
+  restore: async function (id) {
+    const existing = await prisma.announcement.findUnique({ where: { id } });
+    if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (!existing.isDeleted)
+      throw ApiError.badRequest("Thông báo chưa bị xóa.");
+
+    return prisma.announcement.update({
+      where: { id },
+      data: {
+        isDeleted: false,
+        deletedAt: null,
+      },
+    });
+  },
+
+  /**
+   * DELETE /api/announcements/:id/force  (Chỉ ADMIN) — Xóa vĩnh viễn
+   * Chỉ được xóa vĩnh viễn khi đã xóa mềm trước
+   */
+  forceDelete: async function (id) {
+    const existing = await prisma.announcement.findUnique({ where: { id } });
+    if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
+    if (!existing.isDeleted)
+      throw ApiError.badRequest("Phải xóa mềm trước khi xóa vĩnh viễn.");
 
     await prisma.announcement.delete({ where: { id } });
   },

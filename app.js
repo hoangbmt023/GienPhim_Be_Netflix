@@ -80,6 +80,7 @@ app.use("/api/users", require("./routes/user.route"));
 app.use("/api/profiles", require("./routes/profile.route"));
 app.use("/api/movies", require("./routes/movie.route"));
 app.use("/api/contact", require("./routes/contact.route"));
+app.use("/api/announcements", require("./routes/announcement.route"));
 
 // Check DB Connection
 console.log("Prisma Client v6 initialized (Native Engine).");

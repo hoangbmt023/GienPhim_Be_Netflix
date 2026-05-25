@@ -43,7 +43,9 @@ const ProfileController = {
         id: profile.id,
         name: profile.name,
         avatar: profile.avatar,
-        hasPin: !!profile.pin
+        hasPin: !!profile.pin,
+        notifMuteDays: profile.notifMuteDays,
+        notifMutedForever: profile.notifMutedForever
       };
     });
   },
@@ -73,7 +75,9 @@ const ProfileController = {
         id: profile.id,
         name: profile.name,
         avatar: profile.avatar,
-        hasPin: !!profile.pin
+        hasPin: !!profile.pin,
+        notifMuteDays: profile.notifMuteDays,
+        notifMutedForever: profile.notifMutedForever
       },
       profileToken
     };
@@ -198,6 +202,43 @@ const ProfileController = {
     });
 
     return updatedProfile;
+  },
+
+  /**
+   * Cập nhật cài đặt thông báo của profile
+   * @param {string} userId
+   * @param {string} profileId
+   * @param {{ notifMuteDays?: number, notifMutedForever?: boolean }} data
+   */
+  updateNotifSettings: async function (userId, profileId, data) {
+    const VALID_DAYS = [1, 3, 7, 15, 30];
+
+    const profile = await prisma.profile.findFirst({
+      where: { id: profileId, userId, isDeleted: false }
+    });
+    if (!profile) throw ApiError.notFound("Không tìm thấy hồ sơ.");
+
+    const updateData = {};
+
+    if (data.notifMutedForever === true) {
+      updateData.notifMutedForever = true;
+      updateData.notifMuteDays = 0;
+    } else {
+      const days = parseInt(data.notifMuteDays);
+      if (!VALID_DAYS.includes(days)) {
+        throw ApiError.badRequest(`notifMuteDays phải là một trong: ${VALID_DAYS.join(", ")}`);
+      }
+      updateData.notifMuteDays = days;
+      updateData.notifMutedForever = false;
+    }
+
+    const updated = await prisma.profile.update({
+      where: { id: profileId },
+      data: updateData,
+      select: { id: true, notifMuteDays: true, notifMutedForever: true }
+    });
+
+    return updated;
   }
 };
 

@@ -14,6 +14,25 @@ enum Role {
   ADMIN
 }
 
+// ── Announcement Enums ──────────────────────────────────
+enum AnnouncementType {
+  INFO      // Thông tin thông thường
+  WARNING   // Cảnh báo nội dung
+  DANGER    // Nghiêm trọng (bảo trì, cảnh báo API)
+  SUCCESS   // Thông báo tích cực (event, sinh nhật)
+}
+
+enum AnnouncementDisplay {
+  BAR   // Dải chạy marquee bên trên
+  BOX   // Popup box overlay
+}
+
+enum AnnouncementScope {
+  SYSTEM     // Chỉ ADMIN (bảo trì, cảnh báo API)
+  CONTENT    // ADMIN + MODERATOR (cảnh báo nội dung)
+  MARKETING  // ADMIN + MODERATOR (event, sự kiện)
+}
+
 enum UserStatus {
   PENDING
   ACTIVE
@@ -21,30 +40,34 @@ enum UserStatus {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  password       String
-  role           Role            @default(USER)
-  status         UserStatus      @default(PENDING)
-  isDeleted      Boolean         @default(false)
-  profiles       Profile[]
-  refreshTokens  RefreshToken[]
-  contactTickets ContactTicket[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                   String          @id @default(uuid())
+  email                String          @unique
+  password             String
+  role                 Role            @default(USER)
+  status               UserStatus      @default(PENDING)
+  isDeleted            Boolean         @default(false)
+  profiles             Profile[]
+  refreshTokens        RefreshToken[]
+  contactTickets       ContactTicket[]
+  createdAnnouncements Announcement[]  @relation("AnnouncementCreator")
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  avatar    String?
-  pin       String?  // Optional PIN for profile lock
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  avatar            String?
+  pin               String?  // Optional PIN for profile lock
+  isDeleted         Boolean  @default(false)
+  // Notification mute settings
+  notifMuteDays     Int      @default(1)   // 1, 3, 7, 15, 30 days; 0 = forever
+  notifMutedForever Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
   // Relations to histories and lists
   histories History[]
   favorites Favorite[]
@@ -123,4 +146,28 @@ model ContactTicket {
 
   @@index([userId])
   @@index([status])
+}
+
+// ── Announcement ────────────────────────────────────────
+model Announcement {
+  id          String              @id @default(uuid())
+  title       String              // Tên nội bộ để quản lý
+  badge       String              // Text trên badge VD: "THÔNG BÁO"
+  text        String              @db.Text
+  link        String?             // URL nếu có nút "Xem ngay"
+  type        AnnouncementType    @default(INFO)
+  display     AnnouncementDisplay @default(BAR)
+  scope       AnnouncementScope   @default(MARKETING)
+  isActive    Boolean             @default(false) // Publish/Unpublish
+  startAt     DateTime?           // Ngày bắt đầu hiển thị (null = hiển thị ngay)
+  endAt       DateTime?           // Ngày kết thúc hiển thị (null = vĩnh viễn)
+  createdById String
+  createdBy   User                @relation("AnnouncementCreator", fields: [createdById], references: [id])
+  updatedById String?             // ID người sửa sau cùng
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([isActive, startAt, endAt]) // Optimize query lấy thông báo active
+  @@index([scope])
+  @@index([createdById])
 }

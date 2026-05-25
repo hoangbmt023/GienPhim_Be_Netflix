@@ -39,7 +39,9 @@ router.post("/", CheckLogin, uploadMem.single("avatarFile"), ProfileRequestValid
       id: profile.id,
       name: profile.name,
       avatar: profile.avatar,
-      hasPin: !!profile.pin
+      hasPin: !!profile.pin,
+      notifMuteDays: profile.notifMuteDays,
+      notifMutedForever: profile.notifMutedForever
     }, "Tạo tài khoản con thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));
@@ -61,7 +63,9 @@ router.put("/:profileId", CheckLogin, uploadMem.single("avatarFile"), ProfileReq
       id: profile.id,
       name: profile.name,
       avatar: profile.avatar,
-      hasPin: !!profile.pin
+      hasPin: !!profile.pin,
+      notifMuteDays: profile.notifMuteDays,
+      notifMutedForever: profile.notifMutedForever
     }, "Cập nhật tài khoản con thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));
@@ -109,6 +113,23 @@ router.post("/:profileId/reset-pin", CheckLogin, async (req, res) => {
 
     await profileController.resetPinWithPassword(userId, profileId, password, newPin);
     res.send(resultNoData.success("Đặt lại mã PIN thành công."));
+  } catch (error) {
+    res.status(error.status || 500).send(resultNoData.fail(error.message));
+  }
+});
+
+// Update notification mute settings
+router.patch("/:profileId/notification-settings", CheckLogin, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const profileId = req.params.profileId;
+    const { notifMuteDays, notifMutedForever } = req.body;
+
+    const updated = await profileController.updateNotifSettings(userId, profileId, {
+      notifMuteDays,
+      notifMutedForever,
+    });
+    res.send(resultDTO.success(updated, "Cập nhật cài đặt thông báo thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));
   }

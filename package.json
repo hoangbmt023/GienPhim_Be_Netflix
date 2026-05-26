@@ -35,7 +35,8 @@
     "slugify": "^1.6.9",
     "socket.io": "^4.8.3",
     "streamifier": "^0.1.1",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "uuidv7": "^1.2.1"
   },
   "devDependencies": {
     "prisma": "5.22.0"

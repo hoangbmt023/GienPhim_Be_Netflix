@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 const sendHtmlEmail = async (to, subject, html) => {
   try {
     console.log(`📧 Attempting to send email to: ${to} with subject: ${subject}`);
-    
+
     const logoPath = path.join(__dirname, "../public/assets/images/logo_vuong.png");
 
     const info = await transporter.sendMail({

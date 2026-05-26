@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const ApiError = require("../utils/errors/api-error");
 const { generateProfileToken } = require("../utils/jwt/jwt.util");
 const mediaUtil = require("../utils/media.util");
+const { generateId } = require("../utils/uuid.util");
 
 const MAX_PROFILES = 5;
 
@@ -21,6 +22,7 @@ const ProfileController = {
 
     const profile = await prisma.profile.create({
       data: {
+        id: generateId(),
         userId: userId,
         name: data.name,
         avatar: avatarUrl,

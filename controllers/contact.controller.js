@@ -1,11 +1,12 @@
 const prisma = require("../config/prisma");
 const { sendContactNotifyModEmail, sendContactReplyUserEmail } = require("../utils/email.util");
+const { generateId } = require("../utils/uuid.util");
 
 const ContactController = {
   // Người dùng gửi liên hệ
   createTicket: async function (userId, { name, email, subject, message }) {
     const ticket = await prisma.contactTicket.create({
-      data: { userId, name, email, subject, message }
+      data: { id: generateId(), userId, name, email, subject, message }
     });
 
     // Lấy tất cả Moderator đang ACTIVE

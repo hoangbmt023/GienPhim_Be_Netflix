@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/errors/api-error");
 const axios = require("axios");
+const { generateId } = require("../utils/uuid.util");
 
 const MovieController = {
   checkAndSaveMovie: async function (slug) {
@@ -25,6 +26,7 @@ const MovieController = {
       // Only save basic info to manage history/watch later
       movie = await prisma.movie.create({
         data: {
+          id: generateId(),
           slug: item.slug,
         }
       });
@@ -105,6 +107,7 @@ const MovieController = {
 
     const favorite = await prisma.favorite.create({
       data: {
+        id: generateId(),
         profileId: profileId,
         movieId: movie.id
       }
@@ -176,6 +179,7 @@ const MovieController = {
         updatedAt: new Date()
       },
       create: {
+        id: generateId(),
         profileId: profileId,
         movieId: movie.id,
         episode: episode,

@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/errors/api-error");
 const bcrypt = require("bcrypt");
+const { generateId } = require("../utils/uuid.util");
 
 const buildPaging = (query) => {
   const page = parseInt(query.page) || 1;
@@ -38,6 +39,7 @@ const UserController = {
 
     const user = await prisma.user.create({
       data: {
+        id: generateId(),
         email: email,
         password: hashedPassword,
         status: "PENDING",

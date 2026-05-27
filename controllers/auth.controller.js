@@ -6,6 +6,7 @@ const {
   generateToken,
   generateRefreshToken,
 } = require("../utils/jwt/jwt.util");
+const { generateId } = require("../utils/uuid.util");
 
 const MAX_REFRESH_TOKEN = 5;
 
@@ -61,6 +62,7 @@ const AuthController = {
 
     await prisma.refreshToken.create({
       data: {
+        id: generateId(),
         userId: user.id,
         token: token,
         expiryDate: expiryDate,

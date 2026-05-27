@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
@@ -14,9 +14,8 @@ enum Role {
   ADMIN
 }
 
-// ── Announcement Enums ──────────────────────────────────
 enum AnnouncementType {
-  INFO      // Thông tin thông thường
+  INFO      // Thông tin chung
   WARNING   // Cảnh báo nội dung
   DANGER    // Nghiêm trọng (bảo trì, cảnh báo API)
   SUCCESS   // Thông báo tích cực (event, sinh nhật)
@@ -50,6 +49,7 @@ model User {
   refreshTokens        RefreshToken[]
   contactTickets       ContactTicket[]
   createdAnnouncements Announcement[]  @relation("AnnouncementCreator")
+  updatedAnnouncements Announcement[]  @relation("AnnouncementUpdater")
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 }
@@ -72,7 +72,7 @@ model Profile {
   histories History[]
   favorites Favorite[]
 
-  @@index([userId])
+  @@index([userId, isDeleted])
 }
 
 model Movie {
@@ -84,6 +84,8 @@ model Movie {
 
   histories         History[]
   favorites         Favorite[]
+
+  @@index([createdAt])
 }
 
 model History {
@@ -100,6 +102,7 @@ model History {
   updatedAt DateTime @updatedAt
 
   @@unique([profileId, movieId])
+  @@index([profileId, updatedAt])
 }
 
 model Favorite {
@@ -111,6 +114,7 @@ model Favorite {
   createdAt DateTime @default(now())
 
   @@unique([profileId, movieId])
+  @@index([profileId, createdAt])
 }
 
 model RefreshToken {
@@ -120,6 +124,8 @@ model RefreshToken {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiryDate DateTime
   createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum ContactStatus {
@@ -166,11 +172,12 @@ model Announcement {
   createdById String
   createdBy   User                @relation("AnnouncementCreator", fields: [createdById], references: [id])
   updatedById String?             // ID người sửa sau cùng
+  updatedBy   User?               @relation("AnnouncementUpdater", fields: [updatedById], references: [id])
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
   @@index([isActive, startAt, endAt]) // Optimize query lấy thông báo active
   @@index([isDeleted])
-  @@index([scope])
+  @@index([scope, isActive])
   @@index([createdById])
 }

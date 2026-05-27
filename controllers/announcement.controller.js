@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/errors/api-error");
+const { generateId } = require("../utils/uuid.util");
 
 // ── Helpers ───────────────────────────────────────────────
 const buildPaging = (query) => {
@@ -46,6 +47,7 @@ const AnnouncementController = {
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
+        title: true,
         badge: true,
         text: true,
         link: true,
@@ -80,7 +82,10 @@ const AnnouncementController = {
         skip,
         take: size,
         orderBy: showDeleted ? { deletedAt: "desc" } : { createdAt: "desc" },
-        include: { createdBy: { select: { id: true, email: true, role: true } } },
+        include: { 
+          createdBy: { select: { id: true, email: true, role: true } },
+          updatedBy: { select: { id: true, email: true, role: true } },
+        },
       }),
       prisma.announcement.count({ where: filter }),
     ]);
@@ -94,7 +99,10 @@ const AnnouncementController = {
   getById: async function (id) {
     const ann = await prisma.announcement.findUnique({
       where: { id },
-      include: { createdBy: { select: { id: true, email: true, role: true } } },
+      include: { 
+        createdBy: { select: { id: true, email: true, role: true } },
+        updatedBy: { select: { id: true, email: true, role: true } },
+      },
     });
     if (!ann) throw ApiError.notFound("Thông báo không tồn tại.");
     return ann;
@@ -113,6 +121,7 @@ const AnnouncementController = {
 
     const ann = await prisma.announcement.create({
       data: {
+        id: generateId(),
         title: data.title,
         badge: data.badge,
         text: data.text,

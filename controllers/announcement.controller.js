@@ -10,6 +10,23 @@ const buildPaging = (query) => {
   return { page, size, skip };
 };
 
+/**
+ * Tính trạng thái hiển thị động cho Admin Panel
+ * Trả về: DELETED | DRAFT | SCHEDULED | ACTIVE | EXPIRED
+ */
+const computeAnnouncementStatus = (ann) => {
+  if (ann.isDeleted) return "DELETED";
+  if (!ann.isActive)  return "DRAFT";
+
+  const now   = new Date();
+  const start = ann.startAt ? new Date(ann.startAt) : null;
+  const end   = ann.endAt   ? new Date(ann.endAt)   : null;
+
+  if (start && start > now) return "SCHEDULED"; // Đã lên lịch, chưa đến giờ hiển thị
+  if (end   && end   < now) return "EXPIRED";   // Đã hết hạn hiển thị
+  return "ACTIVE";                               // Đang hiển thị cho user
+};
+
 const createPagination = ({ page, size, total }) => ({
   page,
   size,
@@ -90,7 +107,13 @@ const AnnouncementController = {
       prisma.announcement.count({ where: filter }),
     ]);
 
-    return { data, pagination: createPagination({ page, size, total }) };
+    // Bổ sung computedStatus động cho mỗi thông báo
+    const mappedData = data.map(ann => ({
+      ...ann,
+      computedStatus: computeAnnouncementStatus(ann),
+    }));
+
+    return { data: mappedData, pagination: createPagination({ page, size, total }) };
   },
 
   /**
@@ -105,7 +128,7 @@ const AnnouncementController = {
       },
     });
     if (!ann) throw ApiError.notFound("Thông báo không tồn tại.");
-    return ann;
+    return { ...ann, computedStatus: computeAnnouncementStatus(ann) };
   },
 
   /**
@@ -156,6 +179,18 @@ const AnnouncementController = {
       );
     }
 
+    const newStart = data.startAt !== undefined
+      ? data.startAt ? new Date(data.startAt) : null
+      : existing.startAt;
+    
+    const newEnd = data.endAt !== undefined
+      ? data.endAt ? new Date(data.endAt) : null
+      : existing.endAt;
+
+    if (newStart && newEnd && newEnd <= newStart) {
+      throw ApiError.badRequest("Thời gian kết thúc (endAt) phải lớn hơn thời gian bắt đầu (startAt)");
+    }
+
     const ann = await prisma.announcement.update({
       where: { id },
       data: {
@@ -166,18 +201,12 @@ const AnnouncementController = {
         type: data.type ? data.type.toUpperCase() : existing.type,
         display: data.display ? data.display.toUpperCase() : existing.display,
         scope,
-        startAt:
-          data.startAt !== undefined
-            ? data.startAt ? new Date(data.startAt) : null
-            : existing.startAt,
-        endAt:
-          data.endAt !== undefined
-            ? data.endAt ? new Date(data.endAt) : null
-            : existing.endAt,
+        startAt: newStart,
+        endAt: newEnd,
         updatedById: userId,
       },
     });
-    return ann;
+    return { ...ann, computedStatus: computeAnnouncementStatus(ann) };
   },
 
   /**
@@ -200,12 +229,16 @@ const AnnouncementController = {
   },
 
   /**
-   * PATCH /api/announcements/:id/unpublish  (ADMIN)
+   * PATCH /api/announcements/:id/unpublish  (ADMIN + MODERATOR)
    */
-  unpublish: async function (id) {
+  unpublish: async function (id, role) {
     const existing = await prisma.announcement.findUnique({ where: { id } });
     if (!existing) throw ApiError.notFound("Thông báo không tồn tại.");
     if (existing.isDeleted) throw ApiError.badRequest("Thông báo đã bị xóa.");
+
+    if (role === "MODERATOR" && existing.scope === "SYSTEM") {
+      throw ApiError.forbidden("Chỉ ADMIN mới có thể unpublish thông báo hệ thống.");
+    }
 
     return prisma.announcement.update({
       where: { id },

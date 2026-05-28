@@ -34,7 +34,25 @@ const CreateAnnouncementValidator = [
     .isISO8601().withMessage("startAt phải là định dạng ISO8601"),
   body("endAt")
     .optional({ nullable: true, checkFalsy: true })
-    .isISO8601().withMessage("endAt phải là định dạng ISO8601"),
+    .isISO8601().withMessage("endAt phải là định dạng ISO8601")
+    .custom((endAt, { req }) => {
+      const now = new Date();
+      const end = new Date(endAt);
+
+      // endAt phải lớn hơn thời điểm hiện tại
+      if (end <= now) {
+        throw new Error("Thời gian kết thúc (endAt) phải lớn hơn thời gian hiện tại");
+      }
+
+      // Nếu có startAt, endAt phải lớn hơn startAt
+      if (req.body.startAt) {
+        const start = new Date(req.body.startAt);
+        if (end <= start) {
+          throw new Error("Thời gian kết thúc phải lớn hơn thời gian bắt đầu (startAt)");
+        }
+      }
+      return true;
+    }),
 ];
 
 const UpdateAnnouncementValidator = [
@@ -67,7 +85,25 @@ const UpdateAnnouncementValidator = [
     .isISO8601().withMessage("startAt phải là định dạng ISO8601"),
   body("endAt")
     .optional({ nullable: true, checkFalsy: true })
-    .isISO8601().withMessage("endAt phải là định dạng ISO8601"),
+    .isISO8601().withMessage("endAt phải là định dạng ISO8601")
+    .custom((endAt, { req }) => {
+      const now = new Date();
+      const end = new Date(endAt);
+
+      // endAt phải lớn hơn thời điểm hiện tại
+      if (end <= now) {
+        throw new Error("Thời gian kết thúc (endAt) phải lớn hơn thời gian hiện tại");
+      }
+
+      // Nếu có startAt trong request này, endAt phải lớn hơn startAt
+      if (req.body.startAt) {
+        const start = new Date(req.body.startAt);
+        if (end <= start) {
+          throw new Error("Thời gian kết thúc phải lớn hơn thời gian bắt đầu (startAt)");
+        }
+      }
+      return true;
+    }),
 ];
 
 module.exports = { CreateAnnouncementValidator, UpdateAnnouncementValidator };

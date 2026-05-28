@@ -113,14 +113,14 @@ router.patch(
   }
 );
 
-// ── Chỉ ADMIN: Unpublish ────────────────────────────────
+// ── ADMIN + MODERATOR: Unpublish ────────────────────────────────
 router.patch(
   "/:id/unpublish",
   CheckLogin,
-  CheckRole("ADMIN"),
+  CheckRole("ADMIN", "MODERATOR"),
   async function (req, res) {
     try {
-      const ann = await AnnouncementController.unpublish(req.params.id);
+      const ann = await AnnouncementController.unpublish(req.params.id, req.user.role);
       res.send(resultDTO.success(ann, "Đã unpublish thông báo"));
     } catch (err) {
       res.status(err.status || 500).send(resultNoData.fail(err.message));

@@ -1,4 +1,5 @@
 var express = require("express");
+const ENV = require("../config/env.config");
 const resultNoData = require("../utils/results/result-nodata");
 const resultDTO = require("../utils/results/result.dto");
 const jwtUntil = require("../utils/jwt/jwt.util");
@@ -35,9 +36,20 @@ router.post(
       let login = await AuthController.login(email, password);
 
       let refresh = await AuthController.createRefreshToken(email);
+      
+      const cookieOptions = {
+        httpOnly: true,
+        secure: ENV.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: ENV.COOKIE_REFRESH_MAX_AGE,
+      };
+      if (ENV.COOKIE_DOMAIN) cookieOptions.domain = ENV.COOKIE_DOMAIN;
+
+      res.cookie("refreshToken", refresh, cookieOptions);
+
       let data = {
         accessToken: login,
-        refreshToken: refresh,
       };
       res.status(200).send(resultDTO.success(data, "Đăng nhập thành công"));
     } catch (error) {
@@ -54,7 +66,10 @@ router.post(
   validateResult,
   async function (req, res, next) {
     try {
-      let { refreshToken } = req.body;
+      let refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        throw ApiError.unauthorized("Refresh Token không tồn tại trong cookie");
+      }
 
       let decoded;
       try {
@@ -104,7 +119,16 @@ router.post(
   validateResult,
   async function (req, res, next) {
     try {
-      let { refreshToken } = req.body;
+      let refreshToken = req.cookies?.refreshToken;
+      
+      const clearOptions = { path: "/" };
+      if (ENV.COOKIE_DOMAIN) clearOptions.domain = ENV.COOKIE_DOMAIN;
+
+      if (!refreshToken) {
+        res.clearCookie("refreshToken", clearOptions);
+        res.clearCookie("profileToken", clearOptions);
+        return res.status(200).send(resultNoData.success("Đã đăng xuất"));
+      }
 
       let token = await AuthController.findRefreshTokenByToken(refreshToken);
       if (!token) {
@@ -112,6 +136,8 @@ router.post(
       }
 
       await AuthController.deleteOneRefreshToken(token.id);
+      res.clearCookie("refreshToken", clearOptions);
+      res.clearCookie("profileToken", clearOptions);
       res.status(200).send(resultNoData.success("Đăng xuất thành công"));
     } catch (error) {
       return res

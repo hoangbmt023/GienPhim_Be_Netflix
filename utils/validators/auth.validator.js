@@ -14,17 +14,9 @@ module.exports = {
       .notEmpty()
       .withMessage("password không được rỗng"),
   ],
-  RefreshTokenRequestValidator: [
-    body("refreshToken")
-      .notEmpty()
-      .withMessage("Refresh Token không được để trống"),
-  ],
+  RefreshTokenRequestValidator: [],
 
-  LogoutRequestValidator: [
-    body("refreshToken")
-      .notEmpty()
-      .withMessage("Refresh Token không được để trống"),
-  ],
+  LogoutRequestValidator: [],
 
   RevokeTokenRequestValidator: [
     body("refreshToken")

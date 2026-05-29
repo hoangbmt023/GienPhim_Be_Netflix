@@ -1,4 +1,5 @@
 const express = require("express");
+const ENV = require("../config/env.config");
 const profileController = require("../controllers/profile.controller");
 const resultNoData = require("../utils/results/result-nodata");
 const resultDTO = require("../utils/results/result.dto");
@@ -94,6 +95,18 @@ router.post("/:profileId/switch", CheckLogin, SwitchProfileRequestValidator, val
     const { pin } = req.body; // Optional, required if profile has PIN
 
     const profile = await profileController.switchProfile(userId, profileId, pin);
+    
+    const cookieOptions = {
+      httpOnly: true,
+      secure: ENV.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: ENV.COOKIE_PROFILE_MAX_AGE,
+    };
+    if (ENV.COOKIE_DOMAIN) cookieOptions.domain = ENV.COOKIE_DOMAIN;
+
+    res.cookie("profileToken", profile.profileToken, cookieOptions);
+
     res.send(resultDTO.success(profile, "Chuyển tài khoản con thành công."));
   } catch (error) {
     res.status(error.status || 500).send(resultNoData.fail(error.message));

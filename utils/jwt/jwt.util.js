@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const ApiError = require("../errors/api-error");
+const ENV = require("../../config/env.config");
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -8,11 +9,11 @@ const generateToken = (user) => {
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    ENV.JWT_SECRET,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-      issuer: process.env.JWT_ISSUER,
-      audience: process.env.JWT_AUDIENCE,
+      expiresIn: ENV.JWT_EXPIRES_IN,
+      issuer: ENV.JWT_ISSUER,
+      audience: ENV.JWT_AUDIENCE,
     },
   );
 };
@@ -22,18 +23,18 @@ const generateRefreshToken = (userId) => {
     {
       sub: userId,
     },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    ENV.JWT_REFRESH_SECRET,
     {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES || "15d",
+      expiresIn: ENV.JWT_REFRESH_EXPIRES,
     },
   );
 };
 
 const verifyAccessToken = (token) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      issuer: process.env.JWT_ISSUER,
-      audience: process.env.JWT_AUDIENCE,
+    const decoded = jwt.verify(token, ENV.JWT_SECRET, {
+      issuer: ENV.JWT_ISSUER,
+      audience: ENV.JWT_AUDIENCE,
     });
 
     return {
@@ -48,17 +49,17 @@ const verifyAccessToken = (token) => {
 const verifyRefreshToken = (token) => {
   return jwt.verify(
     token,
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    ENV.JWT_REFRESH_SECRET,
   );
 };
 const getUserIdFromToken = (token, isRefresh = false) => {
   const secret = isRefresh
-    ? process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET
-    : process.env.JWT_SECRET;
+    ? ENV.JWT_REFRESH_SECRET
+    : ENV.JWT_SECRET;
 
   const decoded = jwt.verify(token, secret, {
-    issuer: process.env.JWT_ISSUER,
-    audience: process.env.JWT_AUDIENCE,
+    issuer: ENV.JWT_ISSUER,
+    audience: ENV.JWT_AUDIENCE,
   });
 
   return decoded.sub;
@@ -67,14 +68,14 @@ const getUserIdFromToken = (token, isRefresh = false) => {
 const generateProfileToken = (profileId) => {
   return jwt.sign(
     { profileId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_PROFILE_EXPIRES_IN || "30d" }
+    ENV.JWT_SECRET,
+    { expiresIn: ENV.JWT_PROFILE_EXPIRES_IN }
   );
 };
 
 const verifyProfileToken = (token) => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    return jwt.verify(token, ENV.JWT_SECRET);
   } catch (err) {
     throw ApiError.unauthorized("Profile token không hợp lệ hoặc đã hết hạn.");
   }

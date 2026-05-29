@@ -56,10 +56,10 @@ module.exports = {
 
   CheckProfile: async function (req, res, next) {
     try {
-      const profileToken = req.headers["x-profile-token"];
+      const profileToken = req.cookies?.profileToken || req.headers["x-profile-token"];
       
       if (!profileToken) {
-        return res.status(401).send(resultNoData.fail("Thiếu x-profile-token. Vui lòng xác thực tài khoản con qua API switch để lấy token."));
+        return res.status(401).send(resultNoData.fail("Thiếu profile token. Vui lòng xác thực tài khoản con qua API switch để lấy token."));
       }
 
       // Verify the profile token

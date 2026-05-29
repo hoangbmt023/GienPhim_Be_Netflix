@@ -1,4 +1,5 @@
 var express = require("express");
+const ENV = require("./config/env.config");
 var logger = require("morgan");
 var cookieParser = require("cookie-parser");
 var createError = require("http-errors");
@@ -9,7 +10,7 @@ const prisma = require("./config/prisma");
 var app = express();
 
 const allowedOrigins = [
-    process.env.CLIENT_URL,
+    ENV.CLIENT_URL,
     "http://localhost:5173",
     "http://127.0.0.1:5173"
 ].filter(Boolean); // Lọc bỏ nếu CLIENT_URL chưa có
@@ -59,8 +60,13 @@ const actionLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// 1. Apply strict rate limit to sensitive routes (Auth & Contact Creation)
-app.use("/api/auth", authLimiter);
+// 1. Apply strict rate limit to sensitive routes (Auth & Contact Creation), except refresh-token and logout
+app.use("/api/auth", (req, res, next) => {
+    if (req.path === '/refresh-token' || req.path === '/logout') {
+        return next();
+    }
+    return authLimiter(req, res, next);
+});
 
 // 2. Apply action rate limit to all other non-GET /api routes (Create/Update/Delete)
 app.use("/api", (req, res, next) => {
@@ -93,7 +99,7 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500).json({
         success: false,
         message: err.message || "Internal Server Error",
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        stack: ENV.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
 

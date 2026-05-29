@@ -73,6 +73,7 @@ const AnnouncementController = {
         scope: true,
         startAt: true,
         endAt: true,
+        updatedAt: true,
       },
     });
     return list;

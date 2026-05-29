@@ -1,16 +1,17 @@
 const nodemailer = require("nodemailer");
+const ENV = require("../config/env.config");
 const ejs = require("ejs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid"); // tạo ID duy nhất (unique identifier) theo chuẩn UUID.
 
 // Config transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,
+  host: ENV.SMTP_HOST,
+  port: ENV.SMTP_PORT,
+  secure: false, // TLS
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: ENV.SMTP_USER,
+    pass: ENV.SMTP_PASS,
   },
 });
 
@@ -22,7 +23,7 @@ const sendHtmlEmail = async (to, subject, html) => {
     const logoPath = path.join(__dirname, "../public/assets/images/logo_vuong.png");
 
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM,
+      from: ENV.SMTP_FROM,
       to,
       subject,
       html,
@@ -74,7 +75,7 @@ const sendOtpEmail = async (to, otp) => {
 
 // Gửi thông báo ticket mới đến tất cả Moderator
 const sendContactNotifyModEmail = async (to, { ticketId, name, email, subject, message, createdAt }) => {
-  const dashboardUrl = `${process.env.CLIENT_URL}/moderator`;
+  const dashboardUrl = `${ENV.CLIENT_URL}/moderator`;
   const html = await renderTemplate("contact-notify-mod", {
     ticketId, name, email, subject, message, createdAt, dashboardUrl
   });
@@ -83,7 +84,7 @@ const sendContactNotifyModEmail = async (to, { ticketId, name, email, subject, m
 
 // Gửi phản hồi từ Moderator đến người dùng
 const sendContactReplyUserEmail = async (to, { name, subject, originalMessage, reply }) => {
-  const siteUrl = process.env.CLIENT_URL || "https://gienphim.site";
+  const siteUrl = ENV.CLIENT_URL;
   const html = await renderTemplate("contact-reply-user", {
     name, subject, originalMessage, reply, siteUrl
   });
